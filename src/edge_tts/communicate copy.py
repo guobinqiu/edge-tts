@@ -1,8 +1,6 @@
 """Communicate with the service. Only the Communicate class should be used by
 end-users. The other classes and functions are for internal use only."""
 
-print("[edge-tts patch] custom SSL context enabled ✅")
-
 import asyncio
 import concurrent.futures
 import json
@@ -429,12 +427,9 @@ class Communicate:
         audio_was_received = False
 
         # Create a new connection to the service.
-        ssl_ctx = ssl._create_unverified_context()
-        
-        connector = aiohttp.TCPConnector(ssl=False)
-        
+        ssl_ctx = ssl.create_default_context(cafile=certifi.where())
         async with aiohttp.ClientSession(
-            connector=connector,
+            connector=self.connector,
             trust_env=True,
             timeout=self.session_timeout,
         ) as session, session.ws_connect(
