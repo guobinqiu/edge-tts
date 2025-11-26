@@ -1,12 +1,13 @@
 """Communicate with the service. Only the Communicate class should be used by
 end-users. The other classes and functions are for internal use only."""
 
-print("[edge-tts patch] custom SSL context enabled ✅")
+print("[edge-tts patch] custom SSL context enabled!!!")
 
 import asyncio
 import concurrent.futures
 import json
 import ssl
+import sys
 import time
 import uuid
 from contextlib import nullcontext
@@ -429,9 +430,13 @@ class Communicate:
         audio_was_received = False
 
         # Create a new connection to the service.
-        ssl_ctx = ssl._create_unverified_context()
-        
-        connector = aiohttp.TCPConnector(ssl=False)
+        # macOS 环境部分证书链常报错，保持兼容；Linux 上使用系统/Certifi 证书校验
+        if sys.platform.startswith("darwin"):
+            ssl_ctx = ssl._create_unverified_context()
+            connector = aiohttp.TCPConnector(ssl=False)
+        else:
+            ssl_ctx = ssl.create_default_context(cafile=certifi.where())
+            connector = aiohttp.TCPConnector(ssl=ssl_ctx)
         
         async with aiohttp.ClientSession(
             connector=connector,
